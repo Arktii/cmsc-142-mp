@@ -5,7 +5,7 @@ def brgc(n):
         return ['0','1']
     else:
         l1 = brgc(n-1)
-        l2 = [i for i in l1[::-1]]
+        l2 = l1[::-1]
 
         for i in range(len(l1)):
             l1[i] = '0' + l1[i]
