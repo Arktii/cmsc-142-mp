@@ -37,37 +37,40 @@ def binary_reflected_gray_code(n: int) -> list[bitarray]:
         list2.reverse()
 
         for element in list1:
-            element.insert(0, 0)
+            element.append(0)
 
         for element in list2:
-            element.insert(0, 1)
+            element.append(1)
 
         return list1 + list2
 
 
 # Assumes a solution exists
 def knapsack(
-    items: list[tuple[int, int]], all_subsets=list[bitarray]
+    items: list[tuple[int, int]], all_subsets: list[bitarray]
 ) -> tuple[bitarray, int, int]:
     solution = all_subsets[0]
-    solution_weight = calculate_weight(items, solution)
-    solution_value = calculate_value(items, solution)
+    solution_weight = 0
+    solution_value = 0
 
-    weight = solution_weight
-    value = solution_value
+    weight = calculate_weight(items, solution)
+    value = calculate_value(items, solution)
+
+    if weight <= KNAPSACK_CAPACITY:
+        solution_value = value
+
     for i in range(1, len(all_subsets)):
         candidate = all_subsets[i]
-        diff_index = find_first_difference(candidate, solution)
+        diff_index = find_first_difference(candidate, all_subsets[i - 1])
+
         if candidate[diff_index] == 1:
             value += items[diff_index][1]
             weight += items[diff_index][0]
-        else:
+        elif candidate[diff_index] == 0:
             value -= items[diff_index][1]
             weight -= items[diff_index][0]
 
-        if weight > KNAPSACK_CAPACITY:
-            continue
-        elif value >= solution_value:
+        if weight <= KNAPSACK_CAPACITY and value >= solution_value:
             solution = candidate
             solution_weight = weight
             solution_value = value

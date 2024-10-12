@@ -10,7 +10,7 @@ def main():
     total_start = time.time()
 
     gen_start = time.time()
-    all_subsets = binary_reflected_gray_code(24)
+    all_subsets = binary_reflected_gray_code(20)
     gen_end = time.time()
 
     search_start = time.time()
@@ -37,17 +37,17 @@ def binary_reflected_gray_code(n: int) -> list[bitarray]:
         list2.reverse()
 
         for element in list1:
-            element.insert(0, 0)
+            element.append(0)
 
         for element in list2:
-            element.insert(0, 1)
+            element.append(1)
 
         return list1 + list2
 
 
 # Starting with naive approach
 def knapsack(
-    items: list[tuple[int, int]], all_subsets=list[bitarray]
+    items: list[tuple[int, int]], all_subsets: list[bitarray]
 ) -> tuple[bitarray, int, int]:
     solution = all_subsets[0]
     solution_weight = 0
