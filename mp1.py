@@ -5,11 +5,12 @@ from items import items
 # Constants
 KNAPSACK_CAPACITY = 1000
 
+
 def main():
     total_start = time.time()
 
     gen_start = time.time()
-    all_subsets = binary_reflected_gray_code(21)
+    all_subsets = binary_reflected_gray_code(24)
     gen_end = time.time()
 
     search_start = time.time()
@@ -27,13 +28,12 @@ def main():
     print(f"Search Time: {search_end - search_start}")
 
 
-
 def binary_reflected_gray_code(n: int) -> list[bitarray]:
     if n == 1:
         return [bitarray("0"), bitarray("1")]
     else:
         list1 = binary_reflected_gray_code(n - 1)
-        list2 = [x.copy() for x in list1] # deep copy
+        list2 = [x.copy() for x in list1]  # deep copy
         list2.reverse()
 
         for element in list1:
@@ -41,11 +41,14 @@ def binary_reflected_gray_code(n: int) -> list[bitarray]:
 
         for element in list2:
             element.insert(0, 1)
-            
+
         return list1 + list2
 
+
 # Starting with naive approach
-def knapsack(items: list[tuple[int, int]], all_subsets = list[bitarray]) -> tuple[bitarray, int, int]:
+def knapsack(
+    items: list[tuple[int, int]], all_subsets=list[bitarray]
+) -> tuple[bitarray, int, int]:
     solution = all_subsets[0]
     solution_weight = 0
     solution_value = 0
@@ -56,7 +59,7 @@ def knapsack(items: list[tuple[int, int]], all_subsets = list[bitarray]) -> tupl
             continue
 
         value = calculate_value(items, candidate)
-        if value >= solution_value :
+        if value >= solution_value:
             solution = candidate
             solution_weight = weight
             solution_value = value
@@ -71,6 +74,7 @@ def calculate_weight(items: list[tuple[int, int]], item_set: bitarray) -> int:
             weight += items[i][0]
     return weight
 
+
 def calculate_value(items: list[tuple[int, int]], item_set: bitarray) -> int:
     value = 0
     for i in range(len(item_set)):
@@ -78,5 +82,5 @@ def calculate_value(items: list[tuple[int, int]], item_set: bitarray) -> int:
             value += items[i][1]
     return value
 
+
 main()
-    
