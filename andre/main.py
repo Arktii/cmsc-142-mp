@@ -8,8 +8,8 @@ subsets = brgc(item_count)
 
 def main():
     trials = 3
-    f = open("./andre/output.txt", "w")
-    g = open("./andre/output.txt", "a")
+    f = open("output.txt", "w")
+    g = open("output.txt", "a")
     for trial in range(1, trials + 1):
         items = generate_items(item_count)
         print(f"\nTrial {trial}:")
