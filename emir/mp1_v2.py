@@ -10,7 +10,7 @@ def main():
     total_start = time.time()
 
     gen_start = time.time()
-    all_subsets = binary_reflected_gray_code(20)
+    all_subsets = binary_reflected_gray_code(25)
     gen_end = time.time()
 
     search_start = time.time()
