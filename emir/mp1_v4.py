@@ -1,4 +1,5 @@
 import time
+import numpy as np
 from bitarray import bitarray
 from bitarray.util import int2ba
 from items import items
@@ -8,7 +9,7 @@ KNAPSACK_CAPACITY = 1000
 
 
 def main():
-    n = 30
+    n = 25
 
     start = time.time()
 
@@ -25,19 +26,19 @@ def main():
 
 # Uses non-recursive brgc
 def brgc_knapsack(items: list[tuple[int, int]], n: int) -> tuple[bitarray, int, int]:
-    solution = bitarray("0" * n)
+    solution = np.zeros(n, dtype=bool).astype(bool)
     solution_weight = 0
     solution_value = 0
 
-    current = bitarray("0" * n)
+    current = np.zeros(n, dtype=bool).astype(bool)
     current_weight = 0
     current_value = 0
 
-    for i in range(1, 2 ** (n)):
-        change_index = get_index_to_flip(i)
+    for i in range(1, 2 ** (n)) :
+        change_index = get_index_to_flip(n, i)
         current[change_index] = not current[change_index]
 
-        if current[change_index] == 1:
+        if current[change_index]:
             current_weight += items[change_index][0]
             current_value += items[change_index][1]
         else:
@@ -52,9 +53,32 @@ def brgc_knapsack(items: list[tuple[int, int]], n: int) -> tuple[bitarray, int, 
     return (solution, solution_weight, solution_value)
 
 
-def get_index_to_flip(i: int) -> int:
+def get_index_to_flip(n: int, i: int) -> int:
     xor_value = i ^ (i - 1)
     return xor_value.bit_length() - 1
+
+# Note that there should only be one difference, so the first difference is also the only difference
+def find_first_difference(a: bitarray, b: bitarray) -> int:
+    for i in range(len(a)):
+        if a[i] != b[i]:
+            return i
+    return -1
+
+
+def calculate_weight(items: list[tuple[int, int]], item_set: bitarray) -> int:
+    weight = 0
+    for i in range(len(item_set)):
+        if item_set[i] == 1:
+            weight += items[i][0]
+    return weight
+
+
+def calculate_value(items: list[tuple[int, int]], item_set: bitarray) -> int:
+    value = 0
+    for i in range(len(item_set)):
+        if item_set[i] == 1:
+            value += items[i][1]
+    return value
 
 
 main()
