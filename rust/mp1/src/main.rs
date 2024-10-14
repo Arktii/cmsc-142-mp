@@ -1,6 +1,7 @@
 use std::env;
 use std::time::Instant;
 
+const MAX_N: usize = 50;
 const KNAPSACK_CAPACITY: i32 = 1000;
 
 fn main() {
@@ -10,28 +11,28 @@ fn main() {
         .parse()
         .expect("Please provide n as a command-line argument e.g. cargo run -- 25");
 
-    if n > items().len() {
-        panic!(
-            "n cannot be greater than the number of items ({}).",
-            items().len()
-        );
+    if n > MAX_N {
+        panic!("n cannot be greater than the number of items ({}).", MAX_N);
     }
 
-    let start = Instant::now();
+    for i in 0..3 {
+        let items = ITEM_SETS[i].to_vec();
 
-    let items = items();
+        let start = Instant::now();
 
-    let (solution, solution_weight, solution_value) = brgc_knapsack(&items, n);
+        let (solution, solution_weight, solution_value) = brgc_knapsack(&items, n);
 
-    let duration = start.elapsed();
+        let duration = start.elapsed();
 
-    print!("Solution: ");
-    print_solution(&solution);
-    println!();
-    println!("Weight: {}", solution_weight);
-    println!("Value: {}", solution_value);
+        println!("\nItem set {}:", i + 1);
+        print!("Solution: ");
+        print_solution(&solution);
+        println!();
+        println!("Weight: {}", solution_weight);
+        println!("Value: {}", solution_value);
 
-    println!("Total time: {:?}", duration);
+        println!("Total time: {:?}", duration);
+    }
 }
 
 fn brgc_knapsack(items: &Vec<(i32, i32)>, n: usize) -> (Vec<bool>, i32, i32) {
@@ -80,9 +81,8 @@ fn print_solution(solution: &Vec<bool>) {
     print!("]");
 }
 
-// Items pregenerated in Python
-fn items() -> Vec<(i32, i32)> {
-    vec![
+const ITEM_SETS: [[(i32, i32); 50]; 3] = [
+    [
         (51, 212),
         (50, 402),
         (62, 395),
@@ -133,5 +133,109 @@ fn items() -> Vec<(i32, i32)> {
         (90, 433),
         (60, 432),
         (70, 197),
-    ]
-}
+    ],
+    [
+        (72, 172),
+        (55, 236),
+        (66, 397),
+        (98, 262),
+        (99, 439),
+        (68, 400),
+        (93, 488),
+        (79, 458),
+        (72, 451),
+        (68, 123),
+        (51, 204),
+        (84, 269),
+        (80, 185),
+        (63, 167),
+        (75, 312),
+        (78, 403),
+        (54, 468),
+        (61, 273),
+        (71, 451),
+        (55, 423),
+        (93, 362),
+        (91, 194),
+        (100, 181),
+        (68, 218),
+        (72, 278),
+        (77, 161),
+        (64, 320),
+        (87, 174),
+        (95, 381),
+        (95, 298),
+        (92, 387),
+        (61, 258),
+        (54, 243),
+        (65, 311),
+        (73, 234),
+        (77, 195),
+        (98, 479),
+        (97, 270),
+        (74, 142),
+        (80, 231),
+        (99, 427),
+        (66, 432),
+        (88, 158),
+        (94, 453),
+        (53, 346),
+        (76, 467),
+        (54, 138),
+        (66, 429),
+        (70, 202),
+        (96, 158),
+    ],
+    [
+        (59, 186),
+        (60, 420),
+        (92, 324),
+        (70, 300),
+        (60, 494),
+        (100, 133),
+        (61, 204),
+        (94, 490),
+        (99, 119),
+        (60, 384),
+        (54, 347),
+        (63, 164),
+        (100, 237),
+        (67, 456),
+        (62, 136),
+        (96, 133),
+        (65, 397),
+        (54, 103),
+        (63, 387),
+        (62, 184),
+        (74, 373),
+        (83, 212),
+        (52, 496),
+        (78, 342),
+        (76, 232),
+        (75, 169),
+        (82, 148),
+        (50, 116),
+        (62, 424),
+        (72, 228),
+        (95, 326),
+        (52, 327),
+        (78, 231),
+        (89, 326),
+        (73, 485),
+        (75, 404),
+        (55, 248),
+        (55, 175),
+        (61, 172),
+        (61, 181),
+        (89, 377),
+        (72, 246),
+        (79, 277),
+        (76, 289),
+        (80, 474),
+        (96, 159),
+        (71, 339),
+        (93, 280),
+        (52, 476),
+        (77, 149),
+    ],
+];

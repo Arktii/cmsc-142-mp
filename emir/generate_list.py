@@ -1,7 +1,7 @@
 import random
 
 # Constants
-FILE_NAME = "items.py"
+FILE_NAME = "items3.py"
 
 ITEM_COUNT = 50
 WEIGHT_RANGE = range(50, 101)
