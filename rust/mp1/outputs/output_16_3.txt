@@ -1,0 +1,5 @@
+Item set 3:
+Solution: [1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1]
+Weight: 998
+Value: 4275
+Total time: 96.3µs

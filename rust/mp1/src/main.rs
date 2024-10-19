@@ -1,37 +1,52 @@
 use std::env;
+use std::fs::File;
+use std::io::Write;
 use std::time::Instant;
 
 const MAX_N: usize = 50;
 const KNAPSACK_CAPACITY: i32 = 1000;
 
 fn main() {
-    // Get command-line arguments and parse n
     let args: Vec<String> = env::args().collect();
-    let n: usize = args[1]
+    let n_start: usize = args[1]
         .parse()
         .expect("Please provide n as a command-line argument e.g. cargo run -- 25");
 
-    if n > MAX_N {
+    if n_start > MAX_N {
         panic!("n cannot be greater than the number of items ({}).", MAX_N);
     }
 
-    for i in 0..3 {
-        let items = ITEM_SETS[i].to_vec();
+    for n in n_start..=MAX_N {
+        for i in 0..3 {
+            let items = ITEM_SETS[i].to_vec();
 
-        let start = Instant::now();
+            let start = Instant::now();
 
-        let (solution, solution_weight, solution_value) = brgc_knapsack(&items, n);
+            let (solution, solution_weight, solution_value) = brgc_knapsack(&items, n);
 
-        let duration = start.elapsed();
+            let duration = start.elapsed();
 
-        println!("\nItem set {}:", i + 1);
-        print!("Solution: ");
-        print_solution(&solution);
-        println!();
-        println!("Weight: {}", solution_weight);
-        println!("Value: {}", solution_value);
+            let filename = format!("outputs/output_{}_{}.txt", n, i + 1);
+            let mut file = File::create(filename).expect("Unable to create file");
 
-        println!("Total time: {:?}", duration);
+            // Write everything to file
+            writeln!(file, "Item set {}:", i + 1).unwrap();
+            write!(file, "Solution: ").unwrap();
+            write_solution(&mut file, &solution);
+            
+            writeln!(file, "\nWeight: {}", solution_weight).unwrap();
+            writeln!(file, "Value: {}", solution_value).unwrap();
+            writeln!(file, "Total time: {:?}", duration).unwrap();
+
+            // println!("\nItem set {}:", i + 1);
+            // print!("Solution: ");
+            // print_solution(&solution);
+            // println!();
+            // println!("Weight: {}", solution_weight);
+            // println!("Value: {}", solution_value);
+
+            // println!("Total time: {:?}", duration);
+        }
     }
 }
 
@@ -44,7 +59,7 @@ fn brgc_knapsack(items: &Vec<(i32, i32)>, n: usize) -> (Vec<bool>, i32, i32) {
     let mut current_weight = 0;
     let mut current_value = 0;
 
-    for i in 1..(1 << n) {
+    for i in 1..((1 as u64) << n) {
         let change_index = get_index_to_flip(&i);
 
         current[change_index] = !current[change_index];
@@ -67,18 +82,27 @@ fn brgc_knapsack(items: &Vec<(i32, i32)>, n: usize) -> (Vec<bool>, i32, i32) {
     (solution, solution_weight, solution_value)
 }
 
-fn get_index_to_flip(i: &i32) -> usize {
+fn get_index_to_flip(i: &u64) -> usize {
     i.trailing_zeros() as usize
 }
 
-fn print_solution(solution: &Vec<bool>) {
-    print!("[");
+// fn print_solution(solution: &Vec<bool>) {
+//     print!("[");
+//     for i in 0..solution.len() - 1 {
+//         print!("{}", if solution[i] { 1 } else { 0 });
+//         print!(", ");
+//     }
+//     print!("{}", if solution[solution.len() - 1] { 1 } else { 0 });
+//     print!("]");
+// }
+
+fn write_solution(file: &mut File, solution: &Vec<bool>) {
+    write!(file, "[").unwrap();
     for i in 0..solution.len() - 1 {
-        print!("{}", if solution[i] { 1 } else { 0 });
-        print!(", ");
+        write!(file, "{}, ", if solution[i] { 1 } else { 0 }).unwrap();
     }
-    print!("{}", if solution[solution.len() - 1] { 1 } else { 0 });
-    print!("]");
+    write!(file, "{}", if solution[solution.len() - 1] { 1 } else { 0 }).unwrap();
+    write!(file, "]").unwrap();
 }
 
 const ITEM_SETS: [[(i32, i32); 50]; 3] = [
