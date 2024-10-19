@@ -2,8 +2,9 @@ use std::env;
 use std::fs::File;
 use std::io::Write;
 use std::time::Instant;
+use rust_xlsxwriter::{Workbook, Worksheet, Format, FormatAlign};
 
-const MAX_N: usize = 50;
+const MAX_N: usize = 32;
 const KNAPSACK_CAPACITY: i32 = 1000;
 
 fn main() {
@@ -15,6 +16,11 @@ fn main() {
     if n_start > MAX_N {
         panic!("n cannot be greater than the number of items ({}).", MAX_N);
     }
+
+    let mut workbook = Workbook::new();
+    let worksheet = workbook.add_worksheet();
+
+    create_worksheet_headers(worksheet);
 
     for n in n_start..=MAX_N {
         for i in 0..3 {
@@ -33,10 +39,12 @@ fn main() {
             writeln!(file, "Item set {}:", i + 1).unwrap();
             write!(file, "Solution: ").unwrap();
             write_solution(&mut file, &solution);
-            
             writeln!(file, "\nWeight: {}", solution_weight).unwrap();
             writeln!(file, "Value: {}", solution_value).unwrap();
             writeln!(file, "Total time: {:?}", duration).unwrap();
+
+            // duration is in microsecs
+            record_data(worksheet, n as i32, i + 1, duration.as_micros() as f64, &solution, solution_weight, solution_value, (n - n_start + 2) as u32);
 
             // println!("\nItem set {}:", i + 1);
             // print!("Solution: ");
@@ -47,7 +55,16 @@ fn main() {
 
             // println!("Total time: {:?}", duration);
         }
+        /*
+            idk how to do this
+            https://docs.rs/rust_xlsxwriter/latest/rust_xlsxwriter/workbook/struct.Workbook.html#method.save
+            says there that save() can be called multiple times or maybe i dont understand it correctly
+         */
+        // let xlsx_file = format!("outputs/Results_{}_to_{}.xlsx", n_start, MAX_N);
+        // let _ = workbook.save(&xlsx_file);
     }
+    let xlsx_file = format!("outputs/Results_{}_to_{}.xlsx", n_start, MAX_N);
+    let _ = workbook.save(&xlsx_file);
 }
 
 fn brgc_knapsack(items: &Vec<(i32, i32)>, n: usize) -> (Vec<bool>, i32, i32) {
@@ -103,6 +120,43 @@ fn write_solution(file: &mut File, solution: &Vec<bool>) {
     }
     write!(file, "{}", if solution[solution.len() - 1] { 1 } else { 0 }).unwrap();
     write!(file, "]").unwrap();
+}
+
+fn create_worksheet_headers(worksheet: &mut Worksheet) {
+    let format = Format::new().set_bold().set_align(FormatAlign::Center).set_align(FormatAlign::VerticalCenter);
+
+    let _ = worksheet.set_column_width(0, 16); //N column
+    let _ = worksheet.merge_range(0, 0, 1, 0, "N", &format) ;
+
+    for (index, i) in [1, 5, 9].iter().enumerate() {
+        let _ =worksheet.set_column_width(*i, 16);
+        let _ =worksheet.set_column_width(*i + 1, 16);
+        let _ =worksheet.set_column_width(*i + 2, 8);
+        let _ =worksheet.set_column_width(*i + 3, 8);
+
+        let trial = format!("Trial {}", index + 1);
+
+        let _ = worksheet.merge_range(0, *i, 0, *i + 3, &trial, &format) ;
+        let _ = worksheet.write(1, *i, "Time");
+        let _ = worksheet.write(1, *i + 1, "Solution");
+        let _ = worksheet.write(1, *i + 2, "Weight");
+        let _ = worksheet.write(1, *i + 3, "Value");
+    }
+}
+
+fn record_data(worksheet: &mut Worksheet, n: i32, trial: usize, time: f64, solution: &Vec<bool>, solution_weight: i32, solution_value: i32, row: u32) {
+    let col_num: u16 = ((trial - 1) * 4) as u16;
+
+    let _ = worksheet.write(row, 0, n);
+    let _ = worksheet.write(row, col_num + 1, time);
+    let solution_str: String = solution.iter().map(|&s| if s { '1' } else { '0' }).collect();
+    let _ = worksheet.write(row, col_num + 2, &solution_str);
+    let _ = worksheet.write(row, col_num + 3, solution_weight);
+    let _ = worksheet.write(row, col_num + 4, solution_value);
+
+    // I think it looks nicer if the data is centered
+    let center_format = Format::new().set_align(FormatAlign::Center).set_align(FormatAlign::VerticalCenter);
+    let _ = worksheet.set_row_format(row, &center_format);
 }
 
 const ITEM_SETS: [[(i32, i32); 50]; 3] = [
