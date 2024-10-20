@@ -2,4 +2,4 @@ Item set 2:
 Solution: [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1]
 Weight: 972
 Value: 4787
-Total time: 6.1193ms
+Total time: 187.3µs

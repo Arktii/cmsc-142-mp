@@ -4,7 +4,7 @@ use std::io::Write;
 use std::time::Instant;
 use rust_xlsxwriter::{Workbook, Worksheet, Format, FormatAlign};
 
-const MAX_N: usize = 42;
+const MAX_N: usize = 50;
 const KNAPSACK_CAPACITY: i32 = 1000;
 
 fn main() {
@@ -43,25 +43,9 @@ fn main() {
             writeln!(file, "Value: {}", solution_value).unwrap();
             writeln!(file, "Total time: {:?}", duration).unwrap();
 
-            // duration is in microsecs
+            // Write everything to xlsx
             record_data(worksheet, n as i32, i + 1, duration.as_micros() as f64, &solution, solution_weight, solution_value, (n - n_start + 2) as u32);
-
-            // println!("\nItem set {}:", i + 1);
-            // print!("Solution: ");
-            // print_solution(&solution);
-            // println!();
-            // println!("Weight: {}", solution_weight);
-            // println!("Value: {}", solution_value);
-
-            // println!("Total time: {:?}", duration);
         }
-        /*
-            idk how to do this
-            https://docs.rs/rust_xlsxwriter/latest/rust_xlsxwriter/workbook/struct.Workbook.html#method.save
-            says there that save() can be called multiple times or maybe i dont understand it correctly
-         */
-        // let xlsx_file = format!("outputs/Results_{}_to_{}.xlsx", n_start, MAX_N);
-        // let _ = workbook.save(&xlsx_file);
     }
     let xlsx_file = format!("outputs/Results_{}_to_{}.xlsx", n_start, MAX_N);
     let _ = workbook.save(&xlsx_file);
@@ -102,16 +86,6 @@ fn brgc_knapsack(items: &Vec<(i32, i32)>, n: usize) -> (Vec<bool>, i32, i32) {
 fn get_index_to_flip(i: &u64) -> usize {
     i.trailing_zeros() as usize
 }
-
-// fn print_solution(solution: &Vec<bool>) {
-//     print!("[");
-//     for i in 0..solution.len() - 1 {
-//         print!("{}", if solution[i] { 1 } else { 0 });
-//         print!(", ");
-//     }
-//     print!("{}", if solution[solution.len() - 1] { 1 } else { 0 });
-//     print!("]");
-// }
 
 fn write_solution(file: &mut File, solution: &Vec<bool>) {
     write!(file, "[").unwrap();
@@ -154,11 +128,12 @@ fn record_data(worksheet: &mut Worksheet, n: i32, trial: usize, time: f64, solut
     let _ = worksheet.write(row, col_num + 3, solution_weight);
     let _ = worksheet.write(row, col_num + 4, solution_value);
 
-    // I think it looks nicer if the data is centered
+    // Format data
     let center_format = Format::new().set_align(FormatAlign::Center).set_align(FormatAlign::VerticalCenter);
     let _ = worksheet.set_row_format(row, &center_format);
 }
 
+// Pregenerated using python code
 const ITEM_SETS: [[(i32, i32); 50]; 3] = [
     [
         (51, 212),
