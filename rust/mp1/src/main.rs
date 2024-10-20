@@ -4,7 +4,7 @@ use std::io::Write;
 use std::time::Instant;
 use rust_xlsxwriter::{Workbook, Worksheet, Format, FormatAlign};
 
-const MAX_N: usize = 32;
+const MAX_N: usize = 42;
 const KNAPSACK_CAPACITY: i32 = 1000;
 
 fn main() {
