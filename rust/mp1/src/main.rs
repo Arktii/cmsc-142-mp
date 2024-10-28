@@ -47,7 +47,7 @@ fn brgc_knapsack(items: &Vec<(i32, i32)>, n: usize) -> (Vec<bool>, i32, i32) {
     let mut current_weight = 0;
     let mut current_value = 0;
 
-    for i in 1..((1 as u64) << n - 1) {
+    for i in 1..((1 as u64) << n) {
         let change_index = get_index_to_flip(&i);
 
         current[change_index] = !current[change_index];
