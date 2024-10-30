@@ -8,7 +8,7 @@ KNAPSACK_CAPACITY = 1000
 
 
 def main():
-    n = 30
+    n = 2
 
     start = time.time()
 
@@ -36,6 +36,8 @@ def brgc_knapsack(items: list[tuple[int, int]], n: int) -> tuple[bitarray, int, 
     for i in range(1, 2 ** (n)):
         change_index = get_index_to_flip(i)
         current[change_index] = not current[change_index]
+
+        print(current)
 
         if current[change_index] == 1:
             current_weight += items[change_index][0]
