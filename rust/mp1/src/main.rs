@@ -10,7 +10,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let n_start: usize = args[1]
         .parse()
-        .expect("Please provide n as a command-line argument e.g. cargo run -- 25");
+        .expect("Please provide n_start as a command-line argument e.g. cargo run -- 25");
 
     if n_start > MAX_N {
         panic!("n cannot be greater than the number of items ({}).", MAX_N);
