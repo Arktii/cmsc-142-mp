@@ -1,5 +1,6 @@
-andre/*
-!andre/**/*.py
+andre/python/*
+!andre/python/*.py
+andre/js/node_modules/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
