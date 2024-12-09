@@ -1,17 +1,38 @@
 mod items;
 
-use std::time::Instant;
-
+use csv::Writer;
 use items::{Item, ITEM_SETS};
+use std::error::Error;
+use std::fs::File;
+use std::time::Instant;
 
 const START_N: usize = 10;
 const MAX_N: usize = 50;
 const KNAPSACK_CAPACITY: usize = 1000;
 
-fn main() {
+struct Record {
+    value: i32,
+    time: u128,
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
     println!("Hello, world!");
+    let mut wtr = Writer::from_path("results/results.csv")?;
+
+    wtr.write_record(&[
+        "n",
+        "value 1",
+        "time 1",
+        "value 2",
+        "time 2",
+        "value 3",
+        "time 3",
+        "average time",
+    ])?;
 
     for n in START_N..=MAX_N {
+        let mut iteration_data: Vec<Record> = vec![];
+
         for i in 0..3 {
             let items = ITEM_SETS[i].to_vec();
 
@@ -21,6 +42,12 @@ fn main() {
             // let solution_value = dp_tab_solve(&items[0..n].to_vec(), KNAPSACK_CAPACITY);
             let solution_value = dp_mem_solve(&items[0..n].to_vec(), KNAPSACK_CAPACITY);
             let duration = start.elapsed();
+
+            iteration_data.push(Record {
+                value: solution_value,
+                time: duration.as_micros(),
+            });
+
             println!(
                 "n: {}, i: {}, value: {}, time: {}.{:09} seconds",
                 n,
@@ -29,16 +56,27 @@ fn main() {
                 duration.as_secs(),
                 duration.subsec_nanos()
             );
-            // write_to_file(
-            //     &solution,
-            //     &solution_weight,
-            //     &solution_value,
-            //     &duration,
-            //     &i,
-            //     &n,
-            // );
         }
+        write_to_csv(&mut wtr, n, &iteration_data);
     }
+    Ok(())
+}
+
+fn write_to_csv(wtr: &mut Writer<File>, n: usize, iteration_data: &[Record]) {
+    let values: Vec<String> = iteration_data
+        .iter()
+        .flat_map(|record| vec![record.value.to_string(), record.time.to_string()])
+        .collect();
+
+    let mut sum_time: u128 = iteration_data.iter().map(|r| r.time).sum();
+    let avg_time: f64 = (sum_time as f64 / iteration_data.len() as f64);
+
+    let mut record = vec![n.to_string()];
+    record.extend(values);
+    record.push(avg_time.to_string());
+
+    wtr.write_record(&record).unwrap();
+    wtr.flush().unwrap();
 }
 
 // https://www.geeksforgeeks.org/0-1-knapsack-problem-dp-10/#tabulation-or-bottomup-approach-on-x-w-time-and-space
