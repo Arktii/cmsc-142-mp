@@ -1,5 +1,5 @@
 import items from "./items.json" assert { type: "json" };
-import { bottomUp } from "./dynamicProgramming.js";
+import { bottomUp, topDown } from "./dynamicProgramming.js";
 import { createObjectCsvWriter } from "csv-writer";
 
 const maxCapacity = 1000;
@@ -27,7 +27,7 @@ for (let n = nStart; n < nEnd; n++) {
 
   for (let i = 1; i <= 3; i++) {
     const startTime = Date.now();
-    const { value } = bottomUp(maxCapacity, items.slice(0, n));
+    const { value } = topDown(maxCapacity, items.slice(0, n));
     const endTime = Date.now();
     const executionTime = endTime - startTime;
     iterationData.push({ [`value${i}`]: value, [`time${i}`]: executionTime });
@@ -48,3 +48,4 @@ for (let n = nStart; n < nEnd; n++) {
     console.log(`Iteration: ${n}`);
   }
 }
+console.log("Ended: ", new Date());

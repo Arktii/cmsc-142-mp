@@ -21,3 +21,32 @@ export const bottomUp = (capacity, items) => {
 
   return { value: dp[n][capacity] };
 };
+
+export const topDown = (capacity, items) => {
+  const n = items.length;
+  const memo = Array.from({ length: n }, () => Array(capacity + 1).fill(-1));
+  return { value: topDownRec(capacity, items, n - 1, memo) };
+};
+
+const topDownRec = (capacity, items, index, memo) => {
+  if (index < 0) {
+    return 0;
+  }
+
+  // if already computed --> memoized
+  if (memo[index][capacity] !== -1) {
+    return memo[index][capacity];
+  }
+
+  if (items[index].weight > capacity) {
+    memo[index][capacity] = topDownRec(capacity, items, index - 1, memo);
+  } else {
+    memo[index][capacity] = Math.max(
+      items[index].value +
+        topDownRec(capacity - items[index].weight, items, index - 1, memo),
+      topDownRec(capacity, items, index - 1, memo)
+    );
+  }
+
+  return memo[index][capacity];
+};
