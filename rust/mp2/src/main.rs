@@ -18,7 +18,8 @@ fn main() {
             let start = Instant::now();
 
             // let (solution, solution_weight, solution_value) = brgc_knapsack(&items, n);
-            let solution_value = dp_tab_solve(&items[1..n].to_vec(), KNAPSACK_CAPACITY);
+            // let solution_value = dp_tab_solve(&items[0..n].to_vec(), KNAPSACK_CAPACITY);
+            let solution_value = dp_mem_solve(&items[0..n].to_vec(), KNAPSACK_CAPACITY);
             let duration = start.elapsed();
             println!(
                 "n: {}, i: {}, value: {}, time: {}.{:09} seconds",
@@ -63,7 +64,40 @@ fn dp_tab_solve(items: &Vec<Item>, capacity: usize) -> i32 {
 }
 
 // https://www.geeksforgeeks.org/0-1-knapsack-problem-dp-10/#memoization-approach-on-x-w-time-and-space
-fn dp_mem_solve(items: &Vec<Item>, n: usize) {}
+fn dp_mem_solve(items: &Vec<Item>, capacity: usize) -> i32 {
+    let n = items.len() as isize;
+    let mut memo = vec![vec![-1; capacity + 1]; n as usize];
+
+    return dp_mem_rec(items, capacity, n - 1, &mut memo);
+}
+
+fn dp_mem_rec(items: &Vec<Item>, capacity: usize, index: isize, memo: &mut Vec<Vec<i32>>) -> i32 {
+    if index < 0 {
+        return 0;
+    }
+
+    if memo[index as usize][capacity] != -1 {
+        return memo[index as usize][capacity];
+    }
+
+    let result = if items[index as usize].weight as usize > capacity {
+        dp_mem_rec(items, capacity, index - 1, memo)
+    } else {
+        std::cmp::max(
+            dp_mem_rec(items, capacity, index - 1, memo),
+            items[index as usize].value
+                + dp_mem_rec(
+                    items,
+                    capacity - items[index as usize].weight as usize,
+                    index - 1,
+                    memo,
+                ),
+        )
+    };
+    memo[index as usize][capacity] = result;
+
+    return result;
+}
 
 // todo: include way to pass in different evaluation/heuristic functions
 fn greedy_solve(items: &Vec<Item>, n: usize, h: fn(&Item) -> f32) {}
