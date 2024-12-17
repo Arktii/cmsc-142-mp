@@ -8,8 +8,9 @@ use std::error::Error;
 use std::fs::File;
 use std::time::Instant;
 
-const START_N: usize = 10;
-const MAX_N: usize = 50;
+const START_N: usize = 100;
+const MAX_N: usize = 1000;
+const STEP: usize = 100;
 const KNAPSACK_CAPACITY: usize = 1000;
 
 struct Record {
@@ -18,7 +19,6 @@ struct Record {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    println!("Hello, world!");
     let mut wtr = Writer::from_path("results/results.csv")?;
 
     wtr.write_record(&[
@@ -32,17 +32,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         "average time",
     ])?;
 
-    for n in START_N..=MAX_N {
+    for n in (START_N..=MAX_N).step_by(STEP) {
         let mut iteration_data: Vec<Record> = vec![];
 
         for i in 0..3 {
-            let items = ITEM_SETS[i].to_vec();
+            let items = ITEM_SETS[i][0..n].to_vec();
+
+            let items_copy = items.clone();
 
             let start = Instant::now();
-
-            // let (solution, solution_weight, solution_value) = brgc_knapsack(&items, n);
-            // let solution_value = dp_tab_solve(&items[0..n].to_vec(), KNAPSACK_CAPACITY);
             let solution_value = dp_mem_solve(&items[0..n].to_vec(), KNAPSACK_CAPACITY);
+            // let solution_value =
+                // greedy_solve(items_copy, KNAPSACK_CAPACITY, |a, b| b.value.cmp(&a.value));
             let duration = start.elapsed();
 
             iteration_data.push(Record {
@@ -70,8 +71,8 @@ fn write_to_csv(wtr: &mut Writer<File>, n: usize, iteration_data: &[Record]) {
         .flat_map(|record| vec![record.value.to_string(), record.time.to_string()])
         .collect();
 
-    let mut sum_time: u128 = iteration_data.iter().map(|r| r.time).sum();
-    let avg_time: f64 = (sum_time as f64 / iteration_data.len() as f64);
+    let sum_time: u128 = iteration_data.iter().map(|r| r.time).sum();
+    let avg_time: f64 = sum_time as f64 / iteration_data.len() as f64;
 
     let mut record = vec![n.to_string()];
     record.extend(values);
@@ -139,5 +140,24 @@ fn dp_mem_rec(items: &Vec<Item>, capacity: usize, index: isize, memo: &mut Vec<V
     return result;
 }
 
-// todo: include way to pass in different evaluation/heuristic functions
-fn greedy_solve(items: &Vec<Item>, n: usize, h: fn(&Item) -> f32) {}
+fn greedy_solve(
+    mut items: Vec<Item>,
+    capacity: usize,
+    compare: fn(&Item, &Item) -> std::cmp::Ordering,
+) -> i32 {
+    let capacity = capacity as i32;
+
+    items.sort_by(compare);
+
+    let mut total_weight = 0;
+    let mut total_value = 0;
+
+    for item in items {
+        if total_weight + item.weight <= capacity {
+            total_weight += item.weight;
+            total_value += item.value;
+        }
+    }
+
+    return total_value as i32;
+}
