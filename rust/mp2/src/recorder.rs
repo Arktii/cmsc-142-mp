@@ -182,6 +182,7 @@ impl Recorder {
     pub fn write_iteration_result(&mut self, iteration_result: IterationResult) -> Result {
         let mut to_write = vec![iteration_result.n.to_string()];
 
+        // TODO: handle stack overflow error, use tabulation for the error percentage calculation
         // Prepare dynamic programming memoization results + average
         let mut sum_time: u128 = 0;
         for record in &iteration_result.dp_mem {

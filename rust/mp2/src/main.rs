@@ -41,6 +41,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         for i in 0..3 {
             let items = ITEM_SETS[i][0..n].to_vec();
 
+            // TODO: handle stack overflow error
             // DP Memoization
             run_trial(&items, &mut iteration_result.dp_mem, |items, capacity| {
                 dp_mem_solve(items, capacity)
@@ -98,9 +99,6 @@ fn run_trial(
 
     let start = Instant::now();
     let solution_value = algorithm(&mut items_copy, KNAPSACK_CAPACITY);
-    // let solution_value = dp_mem_solve(&items_copy, KNAPSACK_CAPACITY);
-    // let solution_value =
-    // greedy_solve(items_copy, KNAPSACK_CAPACITY, |a, b| b.value.cmp(&a.value));
     let duration = start.elapsed();
 
     results.push(Record::new(solution_value as usize, duration.as_micros()));
