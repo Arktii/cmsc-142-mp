@@ -1,7 +1,9 @@
-mod items;
+pub mod item;
+pub mod items;
 
 use csv::Writer;
-use items::{Item, ITEM_SETS};
+use item::Item;
+use items::ITEM_SETS;
 use std::error::Error;
 use std::fs::File;
 use std::time::Instant;
@@ -49,7 +51,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             });
 
             println!(
-                "n: {}, i: {}, value: {}, time: {}.{:09} seconds",
+                "n: {}, item_set: {}, value: {}, time: {}.{:09} seconds",
                 n,
                 i + 1,
                 solution_value,
