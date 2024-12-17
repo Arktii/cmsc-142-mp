@@ -1,86 +1,127 @@
 pub mod item;
 pub mod items;
+pub mod recorder;
 
-use csv::Writer;
 use item::Item;
 use items::ITEM_SETS;
+use recorder::{IterationResult, Record, Recorder};
 use std::error::Error;
-use std::fs::File;
 use std::time::Instant;
 
 const START_N: usize = 100;
-const MAX_N: usize = 1000;
+const MAX_N: usize = 10000;
 const STEP: usize = 100;
 const KNAPSACK_CAPACITY: usize = 1000;
 
-struct Record {
-    value: i32,
-    time: u128,
-}
+// struct Record {
+//     value: i32,
+//     time: u128,
+// }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut wtr = Writer::from_path("results/results.csv")?;
+    // let mut wtr = Writer::from_path("results/results.csv")?;
 
-    wtr.write_record(&[
-        "n",
-        "value 1",
-        "time 1",
-        "value 2",
-        "time 2",
-        "value 3",
-        "time 3",
-        "average time",
-    ])?;
+    // wtr.write_record(&[
+    //     "n",
+    //     "value 1",
+    //     "time 1",
+    //     "value 2",
+    //     "time 2",
+    //     "value 3",
+    //     "time 3",
+    //     "average time",
+    // ])?;
+
+    let mut recorder = Recorder::new("results/results.csv");
+    recorder.default_setup()?;
 
     for n in (START_N..=MAX_N).step_by(STEP) {
-        let mut iteration_data: Vec<Record> = vec![];
+        let mut iteration_result: IterationResult = IterationResult::new(n);
 
         for i in 0..3 {
             let items = ITEM_SETS[i][0..n].to_vec();
 
-            let items_copy = items.clone();
-
-            let start = Instant::now();
-            let solution_value = dp_mem_solve(&items[0..n].to_vec(), KNAPSACK_CAPACITY);
-            // let solution_value =
-                // greedy_solve(items_copy, KNAPSACK_CAPACITY, |a, b| b.value.cmp(&a.value));
-            let duration = start.elapsed();
-
-            iteration_data.push(Record {
-                value: solution_value,
-                time: duration.as_micros(),
+            // DP Memoization
+            run_trial(&items, &mut iteration_result.dp_mem, |items, capacity| {
+                dp_mem_solve(items, capacity)
             });
 
-            println!(
-                "n: {}, item_set: {}, value: {}, time: {}.{:09} seconds",
-                n,
-                i + 1,
-                solution_value,
-                duration.as_secs(),
-                duration.subsec_nanos()
+            // DP Tabulation
+            run_trial(&items, &mut iteration_result.dp_tab, |items, capacity| {
+                dp_tab_solve(items, capacity)
+            });
+
+            // Greedy Highest Value
+            run_trial(
+                &items,
+                &mut iteration_result.greedy_highest_value,
+                |items, capacity| {
+                    let compare = |a: &Item, b: &Item| b.value.cmp(&a.value);
+                    greedy_solve(items, capacity, compare)
+                },
+            );
+
+            // Greedy Smallest Weight
+            run_trial(
+                &items,
+                &mut iteration_result.greedy_smallest_weight,
+                |items, capacity| {
+                    let compare = |a: &Item, b: &Item| a.weight.cmp(&b.weight);
+                    greedy_solve(items, capacity, compare)
+                },
+            );
+
+            // Greedy Greatest Ratio
+            run_trial(
+                &items,
+                &mut iteration_result.greedy_greatest_ratio,
+                |items, capacity| {
+                    let compare = |a: &Item, b: &Item| (b.value / b.weight).cmp(&(a.value / a.weight));
+                    greedy_solve(items, capacity, compare)
+                },
             );
         }
-        write_to_csv(&mut wtr, n, &iteration_data);
+
+        recorder.write_iteration_result(iteration_result)?;
+
+        println!("Finished iteration {}", n);
     }
     Ok(())
 }
 
-fn write_to_csv(wtr: &mut Writer<File>, n: usize, iteration_data: &[Record]) {
-    let values: Vec<String> = iteration_data
-        .iter()
-        .flat_map(|record| vec![record.value.to_string(), record.time.to_string()])
-        .collect();
+fn run_trial(
+    items: &Vec<Item>,
+    results: &mut Vec<Record>,
+    algorithm: fn(&mut Vec<Item>, usize) -> i32,
+) {
+    let mut items_copy = items.clone();
 
-    let sum_time: u128 = iteration_data.iter().map(|r| r.time).sum();
-    let avg_time: f64 = sum_time as f64 / iteration_data.len() as f64;
+    let start = Instant::now();
+    let solution_value = algorithm(&mut items_copy, KNAPSACK_CAPACITY);
+    // let solution_value = dp_mem_solve(&items_copy, KNAPSACK_CAPACITY);
+    // let solution_value =
+    // greedy_solve(items_copy, KNAPSACK_CAPACITY, |a, b| b.value.cmp(&a.value));
+    let duration = start.elapsed();
 
-    let mut record = vec![n.to_string()];
-    record.extend(values);
-    record.push(avg_time.to_string());
-
-    wtr.write_record(&record).unwrap();
-    wtr.flush().unwrap();
+    results.push(Record::new(solution_value as usize, duration.as_micros()));
 }
+
+// fn write_to_csv(wtr: &mut Writer<File>, n: usize, iteration_data: &[Record]) {
+//     let values: Vec<String> = iteration_data
+//         .iter()
+//         .flat_map(|record| vec![record.value.to_string(), record.time.to_string()])
+//         .collect();
+
+//     let sum_time: u128 = iteration_data.iter().map(|r| r.time).sum();
+//     let avg_time: f64 = sum_time as f64 / iteration_data.len() as f64;
+
+//     let mut record = vec![n.to_string()];
+//     record.extend(values);
+//     record.push(avg_time.to_string());
+
+//     wtr.write_record(&record).unwrap();
+//     wtr.flush().unwrap();
+// }
 
 // https://www.geeksforgeeks.org/0-1-knapsack-problem-dp-10/#tabulation-or-bottomup-approach-on-x-w-time-and-space
 fn dp_tab_solve(items: &Vec<Item>, capacity: usize) -> i32 {
@@ -141,7 +182,7 @@ fn dp_mem_rec(items: &Vec<Item>, capacity: usize, index: isize, memo: &mut Vec<V
 }
 
 fn greedy_solve(
-    mut items: Vec<Item>,
+    items: &mut Vec<Item>,
     capacity: usize,
     compare: fn(&Item, &Item) -> std::cmp::Ordering,
 ) -> i32 {
