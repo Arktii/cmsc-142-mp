@@ -3,7 +3,7 @@ pub mod items;
 pub mod recorder;
 
 use item::Item;
-use items::ITEM_SETS;
+use items::generate_items;
 use recorder::{IterationResult, Record, Recorder};
 use std::error::Error;
 use std::time::Instant;
@@ -13,33 +13,17 @@ const MAX_N: usize = 10000;
 const STEP: usize = 100;
 const KNAPSACK_CAPACITY: usize = 1000;
 
-// struct Record {
-//     value: i32,
-//     time: u128,
-// }
-
 fn main() -> Result<(), Box<dyn Error>> {
-    // let mut wtr = Writer::from_path("results/results.csv")?;
-
-    // wtr.write_record(&[
-    //     "n",
-    //     "value 1",
-    //     "time 1",
-    //     "value 2",
-    //     "time 2",
-    //     "value 3",
-    //     "time 3",
-    //     "average time",
-    // ])?;
-
     let mut recorder = Recorder::new("results/results.csv");
     recorder.default_setup()?;
 
     for n in (START_N..=MAX_N).step_by(STEP) {
         let mut iteration_result: IterationResult = IterationResult::new(n);
 
+        let item_sets = generate_items();
+
         for i in 0..3 {
-            let items = ITEM_SETS[i][0..n].to_vec();
+            let items = item_sets[i][0..n].to_vec();
 
             // TODO: handle stack overflow error
             // DP Memoization
@@ -77,7 +61,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 &items,
                 &mut iteration_result.greedy_greatest_ratio,
                 |items, capacity| {
-                    let compare = |a: &Item, b: &Item| (b.value / b.weight).cmp(&(a.value / a.weight));
+                    let compare =
+                        |a: &Item, b: &Item| (b.value / b.weight).cmp(&(a.value / a.weight));
                     greedy_solve(items, capacity, compare)
                 },
             );
@@ -103,23 +88,6 @@ fn run_trial(
 
     results.push(Record::new(solution_value as usize, duration.as_micros()));
 }
-
-// fn write_to_csv(wtr: &mut Writer<File>, n: usize, iteration_data: &[Record]) {
-//     let values: Vec<String> = iteration_data
-//         .iter()
-//         .flat_map(|record| vec![record.value.to_string(), record.time.to_string()])
-//         .collect();
-
-//     let sum_time: u128 = iteration_data.iter().map(|r| r.time).sum();
-//     let avg_time: f64 = sum_time as f64 / iteration_data.len() as f64;
-
-//     let mut record = vec![n.to_string()];
-//     record.extend(values);
-//     record.push(avg_time.to_string());
-
-//     wtr.write_record(&record).unwrap();
-//     wtr.flush().unwrap();
-// }
 
 // https://www.geeksforgeeks.org/0-1-knapsack-problem-dp-10/#tabulation-or-bottomup-approach-on-x-w-time-and-space
 fn dp_tab_solve(items: &Vec<Item>, capacity: usize) -> i32 {
