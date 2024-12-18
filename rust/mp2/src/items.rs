@@ -11,7 +11,7 @@ const MAX_WEIGHT: usize = 1500;
 const MIN_VALUE: usize = 100;
 const MAX_VALUE: usize = 501;
 
-const SEED: u64 = 123456;
+const SEED: u64 = 20211422;
 
 pub fn generate_items() -> Vec<Vec<Item>> {
     let mut rng = StdRng::seed_from_u64(SEED);
