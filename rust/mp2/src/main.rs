@@ -6,10 +6,11 @@ use item::Item;
 use items::generate_items;
 use recorder::{IterationResult, Record, Recorder};
 use std::error::Error;
+use std::thread;
 use std::time::Instant;
 
 const START_N: usize = 100;
-const MAX_N: usize = 10000;
+const MAX_N: usize = 100_000;
 const STEP: usize = 100;
 const KNAPSACK_CAPACITY: usize = 1000;
 
@@ -25,7 +26,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         for i in 0..3 {
             let items = item_sets[i][0..n].to_vec();
 
-            // TODO: handle stack overflow error
             // DP Memoization
             run_trial(&items, &mut iteration_result.dp_mem, |items, capacity| {
                 dp_mem_solve(items, capacity)
@@ -70,27 +70,23 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         recorder.write_iteration_result(iteration_result)?;
 
-        println!("Finished iteration {}", n);
+        println!("Finished n = {}", n);
     }
     Ok(())
 }
 
-fn run_trial(
-    items: &Vec<Item>,
-    results: &mut Vec<Record>,
-    algorithm: fn(&mut Vec<Item>, usize) -> i32,
-) {
-    let mut items_copy = items.clone();
+fn run_trial(items: &Vec<Item>, results: &mut Vec<Record>, algorithm: fn(Vec<Item>, usize) -> i32) {
+    let items_copy = items.clone();
 
     let start = Instant::now();
-    let solution_value = algorithm(&mut items_copy, KNAPSACK_CAPACITY);
+    let solution_value = algorithm(items_copy, KNAPSACK_CAPACITY);
     let duration = start.elapsed();
 
     results.push(Record::new(solution_value as usize, duration.as_micros()));
 }
 
 // https://www.geeksforgeeks.org/0-1-knapsack-problem-dp-10/#tabulation-or-bottomup-approach-on-x-w-time-and-space
-fn dp_tab_solve(items: &Vec<Item>, capacity: usize) -> i32 {
+fn dp_tab_solve(items: Vec<Item>, capacity: usize) -> i32 {
     let n: usize = items.len();
     let mut dp = vec![vec![0; capacity + 1]; n + 1];
 
@@ -112,11 +108,23 @@ fn dp_tab_solve(items: &Vec<Item>, capacity: usize) -> i32 {
 }
 
 // https://www.geeksforgeeks.org/0-1-knapsack-problem-dp-10/#memoization-approach-on-x-w-time-and-space
-fn dp_mem_solve(items: &Vec<Item>, capacity: usize) -> i32 {
+fn dp_mem_solve(items: Vec<Item>, capacity: usize) -> i32 {
     let n = items.len() as isize;
     let mut memo = vec![vec![-1; capacity + 1]; n as usize];
 
-    return dp_mem_rec(items, capacity, n - 1, &mut memo);
+    // 0.25 KB per possible recursion call ¯\_(ツ)_/¯
+    // I don't know if that's actually enough for a call of dp_mem_rec, 
+    // so this is taking advantage of the fact that the algo 
+    // is unlikely to actually reach n * capacity calls
+    let stack_size = (n as usize) * (capacity) * 256; 
+    let result = thread::Builder::new()
+        .stack_size(stack_size)
+        .spawn(move || dp_mem_rec(&items, capacity, n - 1, &mut memo))
+        .unwrap()
+        .join()
+        .unwrap();
+
+    return result;
 }
 
 fn dp_mem_rec(items: &Vec<Item>, capacity: usize, index: isize, memo: &mut Vec<Vec<i32>>) -> i32 {
@@ -148,7 +156,7 @@ fn dp_mem_rec(items: &Vec<Item>, capacity: usize, index: isize, memo: &mut Vec<V
 }
 
 fn greedy_solve(
-    items: &mut Vec<Item>,
+    mut items: Vec<Item>,
     capacity: usize,
     compare: fn(&Item, &Item) -> std::cmp::Ordering,
 ) -> i32 {

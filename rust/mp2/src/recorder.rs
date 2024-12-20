@@ -182,7 +182,7 @@ impl Recorder {
     pub fn write_iteration_result(&mut self, iteration_result: IterationResult) -> Result {
         let mut to_write = vec![iteration_result.n.to_string()];
 
-        // TODO: handle stack overflow error, use tabulation for the error percentage calculation
+        // TODO: use tabulation for the error percentage calculation
         // Prepare dynamic programming memoization results + average
         let mut sum_time: u128 = 0;
         for record in &iteration_result.dp_mem {
@@ -246,20 +246,3 @@ impl Recorder {
         Ok(())
     }
 }
-
-// fn write_to_csv(wtr: &mut Writer<File>, n: usize, iteration_data: &[Record]) {
-//     let values: Vec<String> = iteration_data
-//         .iter()
-//         .flat_map(|record| vec![record.value.to_string(), record.time.to_string()])
-//         .collect();
-
-//     let sum_time: u128 = iteration_data.iter().map(|r| r.time).sum();
-//     let avg_time: f64 = sum_time as f64 / iteration_data.len() as f64;
-
-//     let mut record = vec![n.to_string()];
-//     record.extend(values);
-//     record.push(avg_time.to_string());
-
-//     wtr.write_record(&record).unwrap();
-//     wtr.flush().unwrap();
-// }
