@@ -12,7 +12,7 @@ use std::time::Instant;
 const START_N: usize = 100;
 const MAX_N: usize = 100_000;
 const STEP: usize = 100;
-const KNAPSACK_CAPACITY: usize = 1000;
+const KNAPSACK_CAPACITY: usize = 10000;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut recorder = Recorder::new("results/results.csv");
@@ -92,7 +92,6 @@ fn dp_tab_solve(items: Vec<Item>, capacity: usize) -> i32 {
 
     for i in 1..=n {
         for w in 1..=capacity {
-            dp[i][w] = dp[i - 1][w];
             if items[i - 1].weight <= w.try_into().unwrap() {
                 dp[i][w] = std::cmp::max(
                     dp[i - 1][w],
@@ -113,10 +112,10 @@ fn dp_mem_solve(items: Vec<Item>, capacity: usize) -> i32 {
     let mut memo = vec![vec![-1; capacity + 1]; n as usize];
 
     // 0.25 KB per possible recursion call ¯\_(ツ)_/¯
-    // I don't know if that's actually enough for a call of dp_mem_rec, 
-    // so this is taking advantage of the fact that the algo 
+    // I don't know if that's actually enough for a call of dp_mem_rec,
+    // so this is taking advantage of the fact that the algo
     // is unlikely to actually reach n * capacity calls
-    let stack_size = (n as usize) * (capacity) * 256; 
+    let stack_size = (n as usize) * (capacity) * 256;
     let result = thread::Builder::new()
         .stack_size(stack_size)
         .spawn(move || dp_mem_rec(&items, capacity, n - 1, &mut memo))
