@@ -21,8 +21,8 @@ pub fn generate_items() -> Vec<Vec<Item>> {
     for _ in 0..ITEM_SETS {
         let mut item_set: Vec<Item> = vec![];
         for __ in 0..ITEM_COUNT {
-            let weight = rng.gen_range(MIN_WEIGHT..MAX_WEIGHT) as i32;
-            let value = rng.gen_range(MIN_VALUE..MAX_VALUE) as i32;
+            let weight = rng.gen_range(MIN_WEIGHT..=MAX_WEIGHT) as i32;
+            let value = rng.gen_range(MIN_VALUE..=MAX_VALUE) as i32;
             item_set.push(Item { weight, value });
         }
         item_sets.push(item_set);
