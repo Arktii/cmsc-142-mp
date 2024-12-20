@@ -1,5 +1,6 @@
 use csv::Writer;
-use std::{fmt::Result, fs::File};
+use std::fmt::Result;
+use std::fs::File;
 
 pub struct Record {
     value: usize,
@@ -68,7 +69,7 @@ impl Recorder {
                 "Time 2".to_string(),
                 "Value 3".to_string(),
                 "Time 3".to_string(),
-                "Average Time".to_string(),
+                "Avg Time".to_string(),
             ],
         );
 
@@ -81,7 +82,7 @@ impl Recorder {
                 "Time 2".to_string(),
                 "Value 3".to_string(),
                 "Time 3".to_string(),
-                "Average Time".to_string(),
+                "Avg Time".to_string(),
             ],
         );
 
@@ -94,7 +95,8 @@ impl Recorder {
                 "Time 2".to_string(),
                 "Value 3".to_string(),
                 "Time 3".to_string(),
-                "Average Time".to_string(),
+                "Avg Time".to_string(),
+                "Avg % Error".to_string(),
             ],
         );
 
@@ -108,6 +110,7 @@ impl Recorder {
                 "Value 3".to_string(),
                 "Time 3".to_string(),
                 "Average Time".to_string(),
+                "Avg % Error".to_string(),
             ],
         );
 
@@ -121,6 +124,7 @@ impl Recorder {
                 "Value 3".to_string(),
                 "Time 3".to_string(),
                 "Average Time".to_string(),
+                "Avg % Error".to_string(),
             ],
         );
 
@@ -182,7 +186,6 @@ impl Recorder {
     pub fn write_iteration_result(&mut self, iteration_result: IterationResult) -> Result {
         let mut to_write = vec![iteration_result.n.to_string()];
 
-        // TODO: use tabulation for the error percentage calculation
         // Prepare dynamic programming memoization results + average
         let mut sum_time: u128 = 0;
         for record in &iteration_result.dp_mem {
@@ -191,7 +194,7 @@ impl Recorder {
 
             sum_time += record.time;
         }
-        let avg_time: f64 = sum_time as f64 / iteration_result.dp_mem.len() as f64;
+        let avg_time: u128 = sum_time / iteration_result.dp_mem.len() as u128;
         to_write.push(avg_time.to_string());
 
         // Prepare dynamic programming tabulation results + average
@@ -202,47 +205,60 @@ impl Recorder {
 
             sum_time += record.time;
         }
-        let avg_time: f64 = sum_time as f64 / iteration_result.dp_tab.len() as f64;
-        to_write.push(avg_time.to_string());
-
-        // TODO: include error percentage, since either of the dp should be exact and correct
-
-        // Prepare greedy highest value results + average
-        let mut sum_time: u128 = 0;
-        for record in &iteration_result.greedy_highest_value {
-            to_write.push(record.value.to_string());
-            to_write.push(record.time.to_string());
-
-            sum_time += record.time;
-        }
-        let avg_time: f64 = sum_time as f64 / iteration_result.greedy_highest_value.len() as f64;
+        let avg_time: u128 = sum_time / iteration_result.dp_tab.len() as u128;
         to_write.push(avg_time.to_string());
 
         // Prepare greedy highest value results + average
-        let mut sum_time: u128 = 0;
-        for record in &iteration_result.greedy_smallest_weight {
-            to_write.push(record.value.to_string());
-            to_write.push(record.time.to_string());
+        prepare_greedy_result(
+            &iteration_result.greedy_highest_value,
+            &iteration_result.dp_tab,
+            &mut to_write,
+        );
 
-            sum_time += record.time;
-        }
-        let avg_time: f64 = sum_time as f64 / iteration_result.greedy_smallest_weight.len() as f64;
-        to_write.push(avg_time.to_string());
+        // Prepare greedy smallest weight results + average
+        prepare_greedy_result(
+            &iteration_result.greedy_smallest_weight,
+            &iteration_result.dp_tab,
+            &mut to_write,
+        );
 
-        // Prepare greedy highest value results + average
-        let mut sum_time: u128 = 0;
-        for record in &iteration_result.greedy_greatest_ratio {
-            to_write.push(record.value.to_string());
-            to_write.push(record.time.to_string());
-
-            sum_time += record.time;
-        }
-        let avg_time: f64 = sum_time as f64 / iteration_result.greedy_greatest_ratio.len() as f64;
-        to_write.push(avg_time.to_string());
+        // Prepare greedy greatest ratio results + average
+        prepare_greedy_result(
+            &iteration_result.greedy_greatest_ratio,
+            &iteration_result.dp_tab,
+            &mut to_write,
+        );
 
         // Write results to csv
         self.writer.write_record(&to_write).unwrap();
         self.writer.flush().unwrap();
         Ok(())
     }
+}
+
+fn prepare_greedy_result(
+    greedy_records: &Vec<Record>,
+    dp_records: &Vec<Record>,
+    to_write: &mut Vec<String>,
+) {
+    let mut sum_time: u128 = 0;
+    let mut sum_error: f64 = 0.0;
+
+    for i in 0..greedy_records.len() {
+        let greedy_record = &greedy_records[i];
+        let dp_record = &dp_records[i];
+        let error = (greedy_record.value as f64 - dp_record.value as f64) / dp_record.value as f64;
+
+        to_write.push(greedy_record.value.to_string());
+        to_write.push(greedy_record.time.to_string());
+
+        sum_time += greedy_record.time;
+        sum_error += error.abs();
+    }
+
+    let avg_time: u128 = sum_time / greedy_records.len() as u128;
+    let avg_error: f64 = sum_error / greedy_records.len() as f64 * 100.0;
+
+    to_write.push(avg_time.to_string());
+    to_write.push(format!("{:.2}%", avg_error));
 }
