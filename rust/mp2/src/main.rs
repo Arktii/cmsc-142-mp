@@ -12,7 +12,7 @@ use std::time::Instant;
 const START_N: usize = 100;
 const MAX_N: usize = 100_000;
 const STEP: usize = 100;
-const KNAPSACK_CAPACITY: usize = 1000;
+const KNAPSACK_CAPACITY: usize = 10000;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut recorder = Recorder::new("results/results.csv");
@@ -128,7 +128,6 @@ fn dp_tab_solve(items: Vec<Item>, capacity: usize) -> i32 {
 
     for i in 1..=n {
         for w in 1..=capacity {
-            dp[i][w] = dp[i - 1][w];
             if items[i - 1].weight <= w.try_into().unwrap() {
                 dp[i][w] = std::cmp::max(
                     dp[i - 1][w],
