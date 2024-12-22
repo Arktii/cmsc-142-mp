@@ -35,6 +35,22 @@ impl IterationResult {
     }
 }
 
+pub struct NontrivialIterationResult {
+    n: usize,
+    pub dp_mem: Vec<(i32, i32)>,
+    pub dp_tab: Vec<(i32, i32)>,
+}
+
+impl NontrivialIterationResult {
+    pub fn new(n: usize) -> NontrivialIterationResult {
+        NontrivialIterationResult {
+            n,
+            dp_mem: vec![],
+            dp_tab: vec![],
+        }
+    }
+}
+
 struct Header {
     name: String,
     columns: Vec<String>,
@@ -132,6 +148,41 @@ impl Recorder {
         Ok(())
     }
 
+    pub fn nontrivial_count_setup(&mut self) -> Result {
+        self.add_header("n".to_string(), vec![]);
+
+        self.add_header(
+            "Dynamic Programming Memoization".to_string(),
+            vec![
+                "Computation 1".to_string(),
+                "Retrieval 1".to_string(),
+                "Computation 2".to_string(),
+                "Retrieval 2".to_string(),
+                "Computation 3".to_string(),
+                "Retrieval 3".to_string(),
+                "Average Computation".to_string(),
+                "Average Retrieval".to_string(),
+            ],
+        );
+
+        self.add_header(
+            "Dynamic Programming Tabulation".to_string(),
+            vec![
+                "Computation 1".to_string(),
+                "Retrieval 1".to_string(),
+                "Computation 2".to_string(),
+                "Retrieval 2".to_string(),
+                "Computation 3".to_string(),
+                "Retrieval 3".to_string(),
+                "Average Computation".to_string(),
+                "Average Retrieval".to_string(),
+            ],
+        );
+
+        self.write_headers().unwrap();
+        Ok(())
+    }
+
     pub fn add_header(&mut self, name: String, columns: Vec<String>) {
         self.headers.push(Header { name, columns });
     }
@@ -170,6 +221,11 @@ impl Recorder {
         self.stored.push(time.to_string());
     }
 
+    // this is for the nontrivial data stuff, delete later if not needed
+    pub fn add_int_data_to_row(&mut self, val: i32) {
+        self.stored.push(val.to_string());
+    }
+
     pub fn add_to_row(&mut self, item: String) {
         self.stored.push(item);
     }
@@ -180,6 +236,48 @@ impl Recorder {
 
         self.clear_stored();
 
+        Ok(())
+    }
+
+    pub fn write_nontrivial_iteration_result(
+        &mut self,
+        iteration_result: NontrivialIterationResult,
+    ) -> Result {
+        let mut to_write = vec![iteration_result.n.to_string()];
+
+        let mut mem_sum_computations: u128 = 0;
+        let mut mem_sum_retrievals: u128 = 0;
+        for record in &iteration_result.dp_mem {
+            to_write.push(record.0.to_string());
+            to_write.push(record.1.to_string());
+
+            mem_sum_computations += record.0 as u128;
+            mem_sum_retrievals += record.1 as u128;
+        }
+        let avg_mem_computations: u128 =
+            mem_sum_computations / iteration_result.dp_mem.len() as u128;
+        let avg_mem_retrievals: u128 = mem_sum_retrievals / iteration_result.dp_mem.len() as u128;
+        to_write.push(avg_mem_computations.to_string());
+        to_write.push(avg_mem_retrievals.to_string());
+
+        let mut tab_sum_computations: u128 = 0;
+        let mut tab_sum_retrievals: u128 = 0;
+        for record in &iteration_result.dp_tab {
+            to_write.push(record.0.to_string());
+            to_write.push(record.1.to_string());
+
+            tab_sum_computations += record.0 as u128;
+            tab_sum_retrievals += record.1 as u128;
+        }
+
+        let avg_tab_computations: u128 =
+            tab_sum_computations / iteration_result.dp_tab.len() as u128;
+        let avg_tab_retrievals: u128 = tab_sum_retrievals / iteration_result.dp_tab.len() as u128;
+        to_write.push(avg_tab_computations.to_string());
+        to_write.push(avg_tab_retrievals.to_string());
+
+        self.writer.write_record(&to_write).unwrap();
+        self.writer.flush().unwrap();
         Ok(())
     }
 
