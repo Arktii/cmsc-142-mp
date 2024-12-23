@@ -141,10 +141,7 @@ fn run_trial(
 
         results.push(Record::new(solution_value as usize, duration.as_micros()));
     } else {
-        // 0.25 KB per possible recursion call ¯\_(ツ)_/¯
-        // I don't know if that's actually enough for a call,
-        // so this is taking advantage of the fact that the algo
-        // is unlikely to actually reach n * capacity calls
+        // 256 bytes per possible recursion call ¯\_(ツ)_/¯
         let stack_size = items.len() * (KNAPSACK_CAPACITY) * 256;
         let (solution_value, duration) = thread::Builder::new()
             .stack_size(stack_size)
@@ -175,10 +172,7 @@ fn run_trial_2(
 
         results.push(data);
     } else {
-        // 0.25 KB per possible recursion call ¯\_(ツ)_/¯
-        // I don't know if that's actually enough for a call,
-        // so this is taking advantage of the fact that the algo
-        // is unlikely to actually reach n * capacity calls
+        // 256 bytes per possible recursion call
         let stack_size = items.len() * (KNAPSACK_CAPACITY) * 256;
         let data = thread::Builder::new()
             .stack_size(stack_size)
@@ -279,16 +273,15 @@ fn dp_tab_count(items: Vec<Item>, capacity: usize) -> (i32, i32) {
 
     for i in 1..=n {
         for w in 1..=capacity {
+            computed += 1;
             if items[i - 1].weight <= w.try_into().unwrap() {
                 dp[i][w] = std::cmp::max(
                     dp[i - 1][w],
                     items[i - 1].value + dp[i - 1][w - (items[i - 1].weight as usize)],
                 );
-
-                // retrieves twice ? dp[i - 1][w] and dp[i - 1][w - (items[i - 1].weight as usize)]
-                // or maybe this is wrong. Pls recheck
+                
+                // retrieves twice: dp[i - 1][w] and dp[i - 1][w - (items[i - 1].weight as usize)]
                 retrieved += 2;
-                computed += 1;
             } else {
                 dp[i][w] = dp[i - 1][w];
                 retrieved += 1;
@@ -333,23 +326,24 @@ fn dp_mem_rec_count(
         return memo[index as usize][capacity];
     }
 
-    *computed += 1;
     let result = if items[index as usize].weight as usize > capacity {
         dp_mem_rec_count(items, capacity, index - 1, memo, computed, retrieved)
     } else {
         std::cmp::max(
             dp_mem_rec_count(items, capacity, index - 1, memo, computed, retrieved),
             items[index as usize].value
-                + dp_mem_rec_count(
-                    items,
-                    capacity - items[index as usize].weight as usize,
-                    index - 1,
-                    memo,
-                    computed,
-                    retrieved,
-                ),
+            + dp_mem_rec_count(
+                items,
+                capacity - items[index as usize].weight as usize,
+                index - 1,
+                memo,
+                computed,
+                retrieved,
+            ),
         )
     };
+    
+    *computed += 1;
     memo[index as usize][capacity] = result;
 
     return result;
