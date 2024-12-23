@@ -9,7 +9,7 @@ const MIN_WEIGHT: usize = 100;
 const MAX_WEIGHT: usize = 1500;
 
 const MIN_VALUE: usize = 100;
-const MAX_VALUE: usize = 501;
+const MAX_VALUE: usize = 500;
 
 const SEED: u64 = 20211422;
 
