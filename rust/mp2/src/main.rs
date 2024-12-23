@@ -94,8 +94,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                 );
             } else {
                 // this records the nontrivial entries (computations and retrievals)
-                // recheck if the computations and retrievals are counted correctly in dp_mem_count and dp_tab_count
-                // haha
 
                 // DP Memoization
                 run_trial_2(
