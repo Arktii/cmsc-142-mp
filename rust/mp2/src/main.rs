@@ -159,6 +159,7 @@ fn run_trial(
         results.push(Record::new(solution_value as usize, duration.as_micros()));
     }
 }
+
 fn run_trial_2(
     items: &Vec<Item>,
     results: &mut Vec<(i32, i32)>,
@@ -203,7 +204,29 @@ fn dp_tab_solve(items: Vec<Item>, capacity: usize) -> i32 {
         }
     }
 
+    // Example usage
+    // let solution = backtrace_dp_tab(&dp, &items, capacity);
+    // println!("Bit array: {:?}", solution);
+
     return dp[n][capacity];
+}
+
+fn backtrace_dp_tab(dp: &Vec<Vec<i32>>, items: &Vec<Item>, capacity: usize) -> Vec<u8> {
+    let mut solution_arr = vec![0; items.len()];
+    let mut w = capacity;
+    let mut i = items.len();
+
+    while i > 0 && w > 0 {
+        // if not same with the value above in the table, then include
+        // if same, then do not include the item and do nothing
+        if dp[i][w] != dp[i - 1][w] {
+            solution_arr[i - 1] = 1;
+            w -= items[i - 1].weight as usize;
+        }
+        i -= 1;
+    }
+
+    return solution_arr;
 }
 
 // https://www.geeksforgeeks.org/0-1-knapsack-problem-dp-10/#memoization-approach-on-x-w-time-and-space
@@ -213,6 +236,18 @@ fn dp_mem_solve(items: Vec<Item>, capacity: usize) -> i32 {
 
     return dp_mem_rec(&items, capacity, n - 1, &mut memo);
 }
+
+// Example usage
+// fn dp_mem_solve(items: Vec<Item>, capacity: usize) -> i32 {
+//     let n = items.len() as isize;
+//     let mut memo = vec![vec![-1; capacity + 1]; n as usize];
+//     let result = dp_mem_rec(&items, capacity, n - 1, &mut memo);
+
+//     let solution = backtrace_dp_mem(&memo, &items, capacity);
+//     println!("Bit array: {:?}", solution);
+
+//     return result;
+// }
 
 fn dp_mem_rec(items: &Vec<Item>, capacity: usize, index: isize, memo: &mut Vec<Vec<i32>>) -> i32 {
     if index < 0 {
@@ -241,6 +276,29 @@ fn dp_mem_rec(items: &Vec<Item>, capacity: usize, index: isize, memo: &mut Vec<V
 
     return result;
 }
+
+fn backtrace_dp_mem(memo: &Vec<Vec<i32>>, items: &Vec<Item>, capacity: usize) -> Vec<u8> {
+    let mut solution_arr = vec![0; items.len()];
+    let mut w = capacity;
+    let mut i = items.len() as isize - 1;
+
+    while i >= 0 && w > 0 {
+        if i == 0 {
+            if memo[i as usize][w] > 0 {
+                solution_arr[i as usize] = 1;
+            }
+        } else {
+            if memo[i as usize][w] != memo[(i - 1) as usize][w] {
+                solution_arr[i as usize] = 1;
+                w -= items[i as usize].weight as usize;
+            }
+        }
+        i -= 1;
+    }
+
+    return solution_arr;
+}
+
 
 fn greedy_solve(
     mut items: Vec<Item>,
@@ -279,7 +337,7 @@ fn dp_tab_count(items: Vec<Item>, capacity: usize) -> (i32, i32) {
                     dp[i - 1][w],
                     items[i - 1].value + dp[i - 1][w - (items[i - 1].weight as usize)],
                 );
-                
+
                 // retrieves twice: dp[i - 1][w] and dp[i - 1][w - (items[i - 1].weight as usize)]
                 retrieved += 2;
             } else {
@@ -332,17 +390,17 @@ fn dp_mem_rec_count(
         std::cmp::max(
             dp_mem_rec_count(items, capacity, index - 1, memo, computed, retrieved),
             items[index as usize].value
-            + dp_mem_rec_count(
-                items,
-                capacity - items[index as usize].weight as usize,
-                index - 1,
-                memo,
-                computed,
-                retrieved,
-            ),
+                + dp_mem_rec_count(
+                    items,
+                    capacity - items[index as usize].weight as usize,
+                    index - 1,
+                    memo,
+                    computed,
+                    retrieved,
+                ),
         )
     };
-    
+
     *computed += 1;
     memo[index as usize][capacity] = result;
 
